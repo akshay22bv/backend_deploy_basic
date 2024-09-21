@@ -4,22 +4,15 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
-const sequelize = require("./src/config/sequelize_config"); // Import Sequelize instance
+// const sequelize = require("./src/config/sequelize_config"); // Import Sequelize instance
 
 const app = express();
 app.use(bodyParser.json()); // To parse incoming JSON requests
 
 app.use(cors());
 
-app.get("/", async (req, res) => {
-  try {
-    await sequelize.authenticate();
-    res.send(`database connected ${PORT}`);
-    await sequelize.sync(); // Sync models with database
-  } catch (error) {
-    // console.error("Unable to connect to the database:", error);
-  }
-  // res.send(`deployed  running on port ${PORT}`);
+app.get("/", (req, res) => {
+  res.send(`deployed  running on port ${PORT}`);
 });
 
 // Start the server
@@ -30,13 +23,13 @@ app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
 
   // Test database connection and sync models
-  try {
-    await sequelize.authenticate();
-    console.log("Database connected...");
-    await sequelize.sync(); // Sync models with database
-  } catch (error) {
-    // console.error("Unable to connect to the database:", error);
-  }
+  // try {
+  //   await sequelize.authenticate();
+  //   console.log("Database connected...");
+  //   await sequelize.sync(); // Sync models with database
+  // } catch (error) {
+  //   // console.error("Unable to connect to the database:", error);
+  // }
 });
 
 // async function createWalletTable(item) {
