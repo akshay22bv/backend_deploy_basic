@@ -4,15 +4,39 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 
-const sequelize = require("./src/config/sequelize_config"); // Import Sequelize instance
-
 const app = express();
 app.use(bodyParser.json()); // To parse incoming JSON requests
 
 app.use(cors());
 
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
 app.get("/", (req, res) => {
   res.send(`deployed  running on port ${PORT}`);
+});
+
+app.get("/users", async (req, res) => {
+  try {
+    const users = await prisma.user.findMany();
+    res.send({ users });
+  } catch (error) {}
+});
+
+// Add a new user
+app.post("/users", async (req, res) => {
+  const { name, email } = req.body;
+  try {
+    const newUser = await prisma.user.create({
+      data: {
+        name,
+        email,
+      },
+    });
+    res.status(201).send({ user: newUser });
+  } catch (error) {
+    res.status(500).send({ error: "Failed to create user" });
+  }
 });
 
 // Start the server
@@ -21,24 +45,4 @@ console.log("PORT: ", PORT);
 
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
-
-  // Test database connection and sync models
-  try {
-    await sequelize.authenticate();
-    console.log("Database connected...");
-    await sequelize.sync(); // Sync models with database
-  } catch (error) {
-    // console.error("Unable to connect to the database:", error);
-  }
 });
-
-// async function createWalletTable(item) {
-//   try {
-//     await Bet.sync({ force: true }); // Use { force: true } to drop existing table and recreate
-//     console.log(` table created successfully`);
-//   } catch (error) {
-//     console.error(`Error creating  table:", error`);
-//   } finally {
-//     await sequelize.close(); // Close the Sequelize connection when done
-//   }
-// }
