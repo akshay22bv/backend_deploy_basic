@@ -12,7 +12,7 @@ app.use(bodyParser.json()); // To parse incoming JSON requests
 app.use(cors());
 
 app.get("/", (req, res) => {
-  res.send(`Server running on port ${PORT}`);
+  res.send(`deployed  running on port ${PORT}`);
 });
 
 // Start the server
