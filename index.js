@@ -3,19 +3,12 @@ require("dotenv").config(); //
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const authRoutes = require("./src/routes/auth"); // Import authentication routes
-const questionRoutes = require("./src/routes/questions"); // Import authentication routes
-const sequelize = require("./src/config/sequelize_config"); // Import Sequelize instance
 
-// const Bet = require("./src/model/Bet");
-require("./src"); // Import the job
+const sequelize = require("./src/config/sequelize_config"); // Import Sequelize instance
 
 const app = express();
 app.use(bodyParser.json()); // To parse incoming JSON requests
 
-// Use the auth routes
-app.use("/api/auth", authRoutes);
-app.use("/api", questionRoutes);
 app.use(cors());
 
 app.get("/", (req, res) => {
