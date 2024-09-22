@@ -8,7 +8,7 @@ const percent = 0.01; // Percentage for target price increase
 const isOnserver = process.env.NODE_ENV === "server";
 
 if (isOnserver) {
-  const job = schedule.scheduleJob("*/10 * * * *", async () => {
+  const job = schedule.scheduleJob("*/1 * * * *", async () => {
     // const transaction = await prisma.$transaction(); // Start transaction
     try {
       // Fetch all asset pairs
