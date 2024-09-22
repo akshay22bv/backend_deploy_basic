@@ -61,3 +61,58 @@ const isOnserver = process.env.NODE_ENV === "server";
 //   }
 // });
 // }
+
+const markMatchedBets = async (questionId) => {
+  try {
+    // Fetch all bets for the given question ID
+    const bets = await prisma.bet.findMany({
+      where: {
+        question_id: questionId,
+        isMatched: false, // Only check unmatched bets
+      },
+    });
+
+    // Group bets by side
+    const yesBets = bets.filter((bet) => bet.side === "yes");
+    const noBets = bets.filter((bet) => bet.side === "no");
+
+    // Check if any yes bet amount plus any no bet amount equals 10
+    yesBets.forEach(async (yesBet) => {
+      noBets.forEach(async (noBet) => {
+        if (parseFloat(yesBet.amount) + parseFloat(noBet.amount) === 10) {
+          // Mark both bets as matched
+          yesBet.isMatched = true;
+          noBet.isMatched = true;
+
+          // Update the bets in the database
+          await prisma.bet.update({
+            where: { id: yesBet.id },
+            data: { isMatched: true },
+          });
+          await prisma.bet.update({
+            where: { id: noBet.id },
+            data: { isMatched: true },
+          });
+        }
+      });
+    });
+  } catch (error) {
+    console.error("Error marking matched bets:", error);
+  }
+};
+
+const job = schedule.scheduleJob("*/1 * * * *", async () => {
+  try {
+    // Save the betting questions with the current prices and expiry time
+
+    // Mark matched bets for each question (you might want to loop through all questions)
+    const questions = await prisma.bettingQuestion.findMany(); // Adjust as necessary
+    for (const question of questions) {
+      await markMatchedBets(question.id);
+    }
+
+    console.log("Betting questions saved with current prices and expiry time.");
+  } catch (error) {
+    console.error("Error occurred, transaction rolled back:", error.message);
+  }
+});

@@ -1,5 +1,6 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client"); // Import PrismaClient
+const authMiddleware = require("../middleware/authMiddleware");
 // const authMiddleware = require("../middleware/authMiddleware");
 const prisma = new PrismaClient();
 const router = express.Router();
@@ -31,7 +32,7 @@ const VALID_NAMES = {
 };
 
 // Get active betting questions route
-router.get("/questions", async (req, res) => {
+router.get("/questions", authMiddleware, async (req, res) => {
   try {
     const { pair } = req.query;
     console.log("pair: ", pair);
@@ -77,8 +78,63 @@ router.get("/questions", async (req, res) => {
   }
 });
 
-router.post("/create-bet", async (req, res) => {
+router.get("/allbets", authMiddleware, async (req, res) => {
   try {
+    const userId = req.user?.id;
+    // Find all betting questions where expiry_time is in the future (i.e., not expired)
+    const allbets = await prisma.bet.findMany({
+      where: {
+        user_id: userId,
+      },
+      include: {
+        BettingQuestion: {
+          select: {
+            id: true,
+            crypto: true,
+            current_price: true,
+            target_price: true,
+            expiry_time: true,
+          },
+        },
+      },
+    });
+
+    if (!allbets.length) {
+      return res.status(404).json({ message: "No active questions found" });
+    }
+
+    const formattedQuestions = allbets
+      .map((bet) => {
+        const validName = VALID_NAMES[bet?.BettingQuestion?.crypto];
+        if (!validName) {
+          return null; // Skip questions with invalid crypto symbols
+        }
+        return {
+          ...bet,
+          text: `${validName.pair1} price be $${
+            bet?.BettingQuestion?.target_price
+          } ${validName.pair2} or higher at ${formatDate(
+            bet?.BettingQuestion?.expiry_time
+          )}?`,
+          current_price: bet?.BettingQuestion?.current_price,
+          target_price: bet?.BettingQuestion?.target_price,
+
+          icon: validName?.icon,
+        };
+      })
+      .filter((question) => question !== null); // Remove any null entries
+
+    res.status(200).json({ allbets: formattedQuestions });
+  } catch (error) {
+    console.log("error: ", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/create-bet", authMiddleware, async (req, res) => {
+  try {
+    const userId = req?.user?.id;
+
     const { questionId, amount, side } = req.body;
 
     // Validate inputs
@@ -92,7 +148,7 @@ router.post("/create-bet", async (req, res) => {
         user_id: userId,
         question_id: questionId,
         amount: parseFloat(amount),
-        side: side === "yes" ? "YES" : "NO", // Adjust side logic if needed
+        side: side, // Adjust side logic if needed
         isMatched: false, // Default isMatched to false
       },
     });
