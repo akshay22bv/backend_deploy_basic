@@ -39,9 +39,9 @@ router.get("/questions", async (req, res) => {
     const questions = await prisma.bettingQuestion.findMany({
       where: {
         crypto: pair,
-        expiry_time: {
-          gt: new Date(), // Only fetch questions that haven't expired
-        },
+        // expiry_time: {
+        //   gt: new Date(), // Only fetch questions that haven't expired
+        // },
       },
     });
 
