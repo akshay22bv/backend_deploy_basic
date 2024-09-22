@@ -7,8 +7,78 @@ generator client {
   provider = "prisma-client-js"
 }
 
+model AssetPairs {
+  id        Int      @id @default(autoincrement())
+  pair      String   
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Bet {
+  id          Int              @id @default(autoincrement())
+  user_id     String
+  question_id String
+  amount      Decimal?
+  side        BetSide
+  result      BetResult?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  User             User             @relation(fields: [user_id], references: [id])
+  BettingQuestion  BettingQuestion  @relation(fields: [question_id], references: [id])
+
+}
+
+enum BetSide {
+  yes
+  no
+}
+
+enum BetResult {
+  win
+  lost
+}
+
+model BettingQuestion {
+  id            String   @id @default(uuid())
+  crypto        String   
+  current_price Decimal
+  target_price  Decimal
+  expiry_time   DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  Bet           Bet[]    // Relation field for Bets related to this BettingQuestion
+}
+
+model Transaction {
+  id        String   @id @default(uuid())
+  user_id   String
+  amount    Decimal
+  type      TransactionType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  User  User @relation(fields: [user_id], references: [id])
+}
+
+enum TransactionType {
+  bet
+  payout
+  deposit
+}
+
 model User {
-  id    Int     @id @default(autoincrement())
-  name  String
-  email String  @unique
+  id          String   @id @default(uuid())
+  username    String   @unique
+  phone       String   @unique
+  email       String   @unique
+  passwordHash String
+  balance     Decimal  @default(0.00)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  Bet         Bet[]
+  Transaction Transaction[]
 }

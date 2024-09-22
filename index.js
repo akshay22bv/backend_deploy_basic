@@ -3,40 +3,19 @@ require("dotenv").config(); //
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const authRoutes = require("./src/routes/auth"); // Import authentication routes
+const questionRoutes = require("./src/routes/bet");
 const app = express();
 app.use(bodyParser.json()); // To parse incoming JSON requests
-
+require("./src"); // Import the job
 app.use(cors());
-
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+app.use("/api/auth", authRoutes);
+app.use("/api", questionRoutes);
 
 app.get("/", (req, res) => {
   res.send(`deployed  running on port ${PORT}`);
-});
-
-app.get("/users", async (req, res) => {
-  try {
-    const users = await prisma.user.findMany();
-    res.send({ users });
-  } catch (error) {}
-});
-
-// Add a new user
-app.post("/users", async (req, res) => {
-  const { name, email } = req.body;
-  try {
-    const newUser = await prisma.user.create({
-      data: {
-        name,
-        email,
-      },
-    });
-    res.status(201).send({ user: newUser });
-  } catch (error) {
-    res.status(500).send({ error: "Failed to create user" });
-  }
 });
 
 // Start the server
