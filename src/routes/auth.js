@@ -77,7 +77,17 @@ router.post("/login", async (req, res) => {
       expiresIn: "1h",
     });
 
-    res.json({ token });
+    // Send token along with additional user information
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        balance: user.balance,
+        phone: user.phone,
+      },
+    });
   } catch (error) {
     console.log("error: ", error);
     res.status(500).json({ error: error.message });

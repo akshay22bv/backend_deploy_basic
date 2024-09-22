@@ -1,5 +1,6 @@
 const express = require("express");
 const { PrismaClient } = require("@prisma/client"); // Import PrismaClient
+// const authMiddleware = require("../middleware/authMiddleware");
 const prisma = new PrismaClient();
 const router = express.Router();
 
@@ -73,6 +74,33 @@ router.get("/questions", async (req, res) => {
   } catch (error) {
     console.log("error: ", error);
     res.status(500).json({ error: error.message });
+  }
+});
+
+router.post("/create-bet", async (req, res) => {
+  try {
+    const { questionId, amount, side } = req.body;
+
+    // Validate inputs
+    if (!userId || !questionId || !amount || !side) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    // Create a new bet
+    const newBet = await prisma.bet.create({
+      data: {
+        user_id: userId,
+        question_id: questionId,
+        amount: parseFloat(amount),
+        side: side === "yes" ? "YES" : "NO", // Adjust side logic if needed
+        isMatched: false, // Default isMatched to false
+      },
+    });
+
+    return res.status(201).json({ success: true, bet: newBet });
+  } catch (error) {
+    console.error("Error creating bet:", error);
+    return res.status(500).json({ error: "Internal server error" });
   }
 });
 
